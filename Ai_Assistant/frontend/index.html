@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Assistant - Sirius</title>
+    <style>
+        body {
+            background-image: url("C:/Users/harip/Downloads/imagesv2.jpeg");
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 180px;
+            padding: 0;
+            background-color: #b1b1a3;
+        }
+        h1{
+            font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+            font-size: xx-large ;
+            font-weight: 900;
+            font-display: WHITE;
+            color: hwb(0 0% 96%);
+
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #e5eae6;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #415db2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #b3001b;
+        }
+
+        .output-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .jarvis-avatar {
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+            margin-trim: 50px;
+            background-image:url("c:/Users/harip/Downloads/jarvis.logo.png") ;
+            
+        }
+
+        .jarvis-avatar img {
+           
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .output-box {
+            flex: 1;
+            padding: 10px;
+            background-color: #c5bfbf;
+            border-radius: 5px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+        }
+
+        #inputText {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #f9f8f8;
+            border-radius: 5px 0 0 5px;
+        }
+
+        #inputText:disabled {
+            background-color: #eef6f5;
+            color: #999;
+        }
+    </style>
+</head>
+<body >
+    <h1><CENTER>MY AI VOICE ASSISSTANT</CENTER></h1>
+    <div class="container">
+        <div class="header">
+            <h1>Virtual Assistant - Sirius</h1>
+            <button id="startBtn" class="btn"><i class="fas fa-microphone"></i> Start</button>
+        </div>
+        <div class="output-container">
+            <div class="jarvis-avatar">
+                <img src="c:/Users/harip/Downloads/jarvis.logo.png" alt="sirius" id="jarvisAvatar">
+            </div>
+            <div class="output-box">
+                <p id="outputText"></p>
+            </div>
+        </div>
+        <div class="input-container">
+            <input type="text" id="inputText" placeholder="Type your command here..." disabled>
+            <button id="sendBtn" class="btn" disabled><i class="fas fa-paper-plane"></i> Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Import the Python script
+        import * as pythonScript from './main4.py';
+
+        const outputText = document.getElementById('outputText');
+        const inputText = document.getElementById('inputText');
+        const sendBtn = document.getElementById('sendBtn');
+        const startBtn = document.getElementById('startBtn');
+        const jarvisAvatar = document.getElementById('jarvisAvatar');
+
+        let isListening = false;
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[event.results.length - 1][0].transcript;
+            inputText.value = transcript;
+            processCommand(transcript);
+        };
+
+        recognition.onspeechend = () => {
+            isListening = false;
+            jarvisAvatar.style.animation = 'none';
+            startBtn.textContent = 'Start';
+        };
+
+        const processCommand = async (command) => {
+            const response = await pythonScript.process_speech(command);
+            outputText.textContent = response.output;
+            speakResponse(response.output);
+        };
+
+        const speakResponse = (text) => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
+        };
+
+        startBtn.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                jarvisAvatar.style.animation = 'none';
+                startBtn.textContent = 'Start';
+            } else {
+                recognition.start();
+                isListening = true;
+                jarvisAvatar.style.animation = 'pulse 2s infinite';
+                startBtn.textContent = 'Stop';
+            }
+        });
+
+        sendBtn.addEventListener('click', () => {
+            const command = inputText.value;
+            processCommand(command);
+            inputText.value = '';
+        });
+
+        inputText.addEventListener('input', () => {
+            sendBtn.disabled = inputText.value.trim() === '';
+        });
+    </script>
+</body>
+</html>
